@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys,os,getopt
-sys.path.insert(0, 'simple_salesforce')
+sys.path.insert(0, 'simple-salesforce')
 from simple_salesforce import Salesforce
 import urllib
 import urllib2
@@ -16,6 +16,7 @@ from StringIO import StringIO
 
 import os
 
+sys.path.insert(0, 'ds-integration')
 from DefenseStorm import DefenseStorm
 
 class integration(object):
