@@ -1,0 +1,12 @@
+[cef]
+VENDOR = Salesforce
+PRODUCT = EventLogs
+VERSION = 1.0
+SEVERITY = 5
+CEF_VERSION = CEF:0
+
+[salesforce]
+username = USERNAME
+password = PASSWORD
+security_token = TOKEN
+instance_url = https://api.salesforce.com
