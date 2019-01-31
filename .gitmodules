@@ -3,4 +3,4 @@
 	url = https://github.com/simple-salesforce/simple-salesforce.git
 [submodule "ds-integration"]
 	path = ds-integration
-	url = https://github.com/alexDefenseStorm/ds-integration.git
+	url = https://github.com/DefenseStorm/ds-integration.git
