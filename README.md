@@ -1,6 +1,10 @@
 Salesforce Integration for DefenseStorm
 
-to pull this repository and submodules:
+to pull this repository and submodules into /usr/local:
+
+become root
+
+cd /usr/local
 
 git clone --recurse-submodules https://github.com/DefenseStorm/salesforceEventLogs.git
 
