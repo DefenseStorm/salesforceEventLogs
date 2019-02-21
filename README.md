@@ -2,11 +2,11 @@ Salesforce Integration for DefenseStorm
 
 to pull this repository and submodules into /usr/local:
 
-become root
+As root:
 
-cd /usr/local
+    cd /usr/local
 
-git clone --recurse-submodules https://github.com/DefenseStorm/salesforceEventLogs.git
+    git clone --recurse-submodules https://github.com/DefenseStorm/salesforceEventLogs.git
 
 1. If this is the first integration on this DVM, Do the following:
 
@@ -32,4 +32,13 @@ git clone --recurse-submodules https://github.com/DefenseStorm/salesforceEventLo
 3. Add the following entry to the root crontab so the script will run every
    day at 2am
 
-   0 2 * * * /usr/local/salesforceEventLogs/salesforceEventLogs.py
+   0 2 * * * cd /usr/local/salesforceEventLogs; ./salesforceEventLogs.py
+
+Testing:
+
+- To Execute by Hand:
+    cd /usr/local/salesforceEventLogs
+    ./salesforceEventLogs
+
+- Local logs are in /var/log/syslog.  To watch real time:
+    tail -f /var/log/syslog
