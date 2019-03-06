@@ -21,6 +21,19 @@ from DefenseStorm import DefenseStorm
 
 class integration(object):
 
+    # Field mappings are local fields = GRID fields
+    JSON_field_mappings = {
+        'CLIENT_IP' : 'client_ip',
+        'USER' : 'username',
+        'EVENT_TYPE' : 'category',
+        'TIMESTAMP' : 'timestamp',
+        'FILE_TYPE' : 'file_type',
+        'SOURCE_IP' : 'src_ip',
+        'BROWSER_TYPE' : 'http_user_agent',
+        'URI' : 'http_path',
+        'LOGIN_STATUS' : 'status'
+    }
+
     def getSalesForceLookupList(self, ObjectName, ElementName):
         entries = {}
         query = 'SELECT Id,%s From %s' %(ElementName, ObjectName)
@@ -41,7 +54,7 @@ class integration(object):
             if state  != None:
                 query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where Interval = \'hourly\' and LogDate > %s Order By LogDate ASC' %state
             else:
-                query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where LogDate >= YESTERDAY and Interval = \'hourly\' Order By LogDate ASC'
+                query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where LogDate >= YESTERDAY and Interval = \'hourly\' Order By LogDate ASC LIMIT 10'
         elif self.interval == 'daily':
             query = 'SELECT Id, EventType, Logdate, Interval From EventLogFile Where LogDate = Last_n_Days:2'
         else:
@@ -131,7 +144,6 @@ class integration(object):
             start = time.time()
             file=item['filename']
             self.ds.log('DEBUG', 'Starting sending file: %s' %item['filename'])
-            type=item['type']
             with open(datadir+'/'+file) as f:
                 header = f.readline()
                 header = header.replace('\"','')
@@ -139,7 +151,6 @@ class integration(object):
                 elementList = header.split(",")
                 f.seek(0)
                 for line in csv.DictReader(f):
-                    line['category'] = type
                     try:
                         if 'USER_ID_DERIVED' in line.keys():
                             line['USER'] = self.UserList[line['USER_ID_DERIVED']]
@@ -234,7 +245,8 @@ class integration(object):
     
                     self.ds.writeCEFEvent(type=type, action=action, dataDict=extension)
                     '''
-                    self.ds.writeJSONEvent(line)
+                    line['message'] = line['EVENT_TYPE']
+                    self.ds.writeJSONEvent(line, JSON_field_mappings = self.JSON_field_mappings)
 
             end = time.time()
             secs = end - start
