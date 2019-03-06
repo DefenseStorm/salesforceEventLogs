@@ -1,16 +1,12 @@
-[cef]
-VENDOR = Salesforce
-PRODUCT = EventLogs
-VERSION = 1.0
-SEVERITY = 5
-CEF_VERSION = CEF:0
+[json]
+app_name = Salesforce
+version = 1.0
 
 [salesforce]
-username = USERNAME
-password = PASSWORD
-security_token = TOKEN
-instance_url = https://api.salesforce.com
-
-#Interval is hourly or daily and this impacts the cron script you would run
+username = 
+password = 
+security_token = 
+instance_url = 
 interval = hourly
 state_dir = /usr/local/salesforceEventLogs/state
+
