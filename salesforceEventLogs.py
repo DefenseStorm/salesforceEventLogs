@@ -36,11 +36,30 @@ class integration(object):
         ''' Query salesforce service using REST API '''
     
         # query Ids from Event Log File
-        query = 'SELECT Id, EventType, Logdate From EventLogFile Where LogDate = Last_n_Days:2'
+        if self.interval == 'hourly':
+            state = self.ds.get_state(self.state_dir)
+            if state  != None:
+                query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where Interval = \'hourly\' and LogDate > %s Order By LogDate ASC' %state
+            else:
+                query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where LogDate >= YESTERDAY and Interval = \'hourly\' Order By LogDate ASC'
+        elif self.interval == 'daily':
+            query = 'SELECT Id, EventType, Logdate, Interval From EventLogFile Where LogDate = Last_n_Days:2'
+        else:
+            self.ds.log('ERROR', "Bad entry for 'interval' in conf file")
+            sys.exit()
+
+        print query
+
         res_dict = self.sf.query_all(query)
     
         # capture record result size to loop over
         total_size = res_dict['totalSize']
+
+        last_time = None
+        for item in res_dict['records']:
+            print "%s:%s:%s" %(item['EventType'], item['LogDate'], item['Interval'])
+            last_time = item['LogDate']
+        print last_time
     
         # provide feedback if no records are returned
         if total_size < 1:
@@ -56,6 +75,7 @@ class integration(object):
             ids = res_dict['records'][i]['Id']
             types = res_dict['records'][i]['EventType']
             dates = res_dict['records'][i]['LogDate']
+            self.new_state = dates
     
             # create REST API request
             url = self.ds.config_get('salesforce', 'instance_url') + '/services/data/v33.0/sobjects/EventLogFile/'+ids+'/LogFile'
@@ -70,7 +90,7 @@ class integration(object):
             res = urllib2.urlopen(req)
     
             # provide feedback to user
-            self.ds.log('DEBUG', 'Downloading: ' + dates[:10] + '-' + types + '.csv to ' + os.getcwd() + '/' + dir)
+            self.ds.log('DEBUG', 'Downloading: ' + dates + '-' + types + '.csv to ' + os.getcwd() + '/' + dir)
     
             # if the response is gzip-encoded as expected
             # compression code from http://bit.ly/pyCompression
@@ -90,14 +110,14 @@ class integration(object):
                 buf.close()
     
             # write buffer to CSV with following naming convention yyyy-mm-dd-eventtype.csv
-            file = open(dir + '/' +dates[:10]+'-'+types+'.csv', 'w')
+            file = open(dir + '/' +dates+'-'+types+'.csv', 'w')
             file.write(data)
     
             # end profiling
             end = time.time()
             secs = end - start
     
-            self.ds.log('INFO', 'File: ' + dates[:10] + '-' + types + '.csv to ' + os.getcwd() + '/' + dir + ' elapsed time: ' + str('%0.2f' %secs) + ' seconds')
+            self.ds.log('INFO', 'File: ' + dates + '-' + types + '.csv to ' + os.getcwd() + '/' + dir + ' elapsed time: ' + str('%0.2f' %secs) + ' seconds')
     
             file.close
             i = i + 1
@@ -119,6 +139,7 @@ class integration(object):
                 elementList = header.split(",")
                 f.seek(0)
                 for line in csv.DictReader(f):
+                    line['category'] = type
                     try:
                         if 'USER_ID_DERIVED' in line.keys():
                             line['USER'] = self.UserList[line['USER_ID_DERIVED']]
@@ -154,7 +175,7 @@ class integration(object):
                             line['SITE'] = self.SiteList[line['SITE_ID']]
                     except KeyError:
                         pass
-    
+                    ''' 
                     try:
                         if 'EVENT_TYPE' in line.keys():
                             action = line['EVENT_TYPE']
@@ -167,8 +188,6 @@ class integration(object):
                     for key in line:
                         if line[key] == '':
                             continue
-                        elif key == 'EVENT_TYPE':
-                            extension['cat'] = line[key]
                         #elif key == 'USER_ID_DERIVED':
                         #    extension['duid'] = line[key]
                         elif key == 'USER':
@@ -214,6 +233,8 @@ class integration(object):
                     extension['msg'] = ' '.join(leftovers).replace('=','\\=')
     
                     self.ds.writeCEFEvent(type=type, action=action, dataDict=extension)
+                    '''
+                    self.ds.writeJSONEvent(line)
 
             end = time.time()
             secs = end - start
@@ -227,6 +248,15 @@ class integration(object):
           mydict = { 'type': types, 'filename': filename }
           filelist.append(mydict)
        return filelist
+
+    def getLookupTables(self):
+        self.OrganizationList = self.getSalesForceLookupList('Organization', 'Name')
+        self.ReportList = self.getSalesForceLookupList('Report', 'Name')
+        self.DashboardList = self.getSalesForceLookupList('Dashboard', 'Title')
+        self.DocumentList = self.getSalesForceLookupList('Document', 'Name')
+        self.DashboardComponentList = self.getSalesForceLookupList('DashboardComponent', 'Name')
+        self.SiteList = self.getSalesForceLookupList('Site', 'Name')
+        self.UserList = self.getSalesForceLookupList('User', 'Email')
     
     def run(self):
         try:
@@ -236,6 +266,9 @@ class integration(object):
             self.security_token = self.ds.config_get('salesforce', 'security_token')
             self.instance_url = self.ds.config_get('salesforce', 'instance_url')
             # CEF Info
+            # Other options
+            self.interval = self.ds.config_get('salesforce', 'interval')
+            self.state_dir = self.ds.config_get('salesforce', 'state_dir')
     
         except getopt.GetoptError:
             self.ds.log('CRITICAL', 'Error reading config values')
@@ -250,24 +283,21 @@ class integration(object):
     
         if self.dir == None:
             self.ds.log('INFO', 'Processing events from Salesforce')
-            self.dir = (date.today() - timedelta(1)).strftime("%Y-%m-%d")
+            if self.interval == 'hourly':
+                self.dir = date.today().strftime("%Y-%m-%d")
+            else:
+                self.dir = (date.today() - timedelta(1)).strftime("%Y-%m-%d")
             self.getEventLogs(self.dir)
         else:
             self.ds.log('INFO', 'Processing events from directory: ' + self.dir)
-    
+
         self.filelist = self.dirFile(self.dir)
-    
-        self.OrganizationList = self.getSalesForceLookupList('Organization', 'Name')
-        self.ReportList = self.getSalesForceLookupList('Report', 'Name')
-        self.DashboardList = self.getSalesForceLookupList('Dashboard', 'Title')
-        self.DocumentList = self.getSalesForceLookupList('Document', 'Name')
-        self.DashboardComponentList = self.getSalesForceLookupList('DashboardComponent', 'Name')
-        self.SiteList = self.getSalesForceLookupList('Site', 'Name')
-        self.UserList = self.getSalesForceLookupList('User', 'Email')
-    
+        self.getLookupTables() 
         self.handleFiles(self.dir, self.filelist)
         if self.cleanup:
             shutil.rmtree(self.dir)
+
+        self.ds.set_state(self.state_dir, self.new_state)
 
     def usage(self):
         print
@@ -295,6 +325,7 @@ class integration(object):
         self.send_syslog = True
         self.ds = None
         self.dir = None
+        self.new_state = None
     
         try:
             opts, args = getopt.getopt(argv,"htnld:",["datedir="])

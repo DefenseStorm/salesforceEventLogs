@@ -10,3 +10,7 @@ username = USERNAME
 password = PASSWORD
 security_token = TOKEN
 instance_url = https://api.salesforce.com
+
+#Interval is hourly or daily and this impacts the cron script you would run
+interval = hourly
+state_dir = /usr/local/salesforceEventLogs/state
