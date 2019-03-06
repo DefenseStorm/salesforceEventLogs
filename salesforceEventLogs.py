@@ -54,14 +54,13 @@ class integration(object):
             if state  != None:
                 query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where Interval = \'hourly\' and LogDate > %s Order By LogDate ASC' %state
             else:
-                query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where LogDate >= YESTERDAY and Interval = \'hourly\' Order By LogDate ASC LIMIT 10'
+                query = 'SELECT Id, EventType, Interval, LogDate, LogFile, Sequence From EventLogFile Where LogDate >= YESTERDAY and Interval = \'hourly\' Order By LogDate ASC'
         elif self.interval == 'daily':
             query = 'SELECT Id, EventType, Logdate, Interval From EventLogFile Where LogDate = Last_n_Days:2'
         else:
             self.ds.log('ERROR', "Bad entry for 'interval' in conf file")
             sys.exit()
 
-        print query
 
         res_dict = self.sf.query_all(query)
     
@@ -70,9 +69,7 @@ class integration(object):
 
         last_time = None
         for item in res_dict['records']:
-            print "%s:%s:%s" %(item['EventType'], item['LogDate'], item['Interval'])
             last_time = item['LogDate']
-        print last_time
     
         # provide feedback if no records are returned
         if total_size < 1:
