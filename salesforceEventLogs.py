@@ -23,10 +23,10 @@ class integration(object):
 
     # Field mappings are local fields = GRID fields
     JSON_field_mappings = {
-        'CLIENT_IP' : 'client_ip',
+        'CLIENT_IP' : 'ip_src',
         'USER' : 'username',
         'EVENT_TYPE' : 'category',
-        'TIMESTAMP' : 'timestamp',
+        'TIMESTAMP_DERIVED' : 'timestamp',
         'FILE_TYPE' : 'file_type',
         'SOURCE_IP' : 'src_ip',
         'BROWSER_TYPE' : 'http_user_agent',
