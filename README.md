@@ -29,10 +29,13 @@ As root:
       security_token
       instance_url
 
-3. Add the following entry to the root crontab so the script will run every
-   day at 2am
+3. DAILY RUNS: Set "interval" in conf file to "daily" and add the following entry to the root crontab so the script will run every day at 2am
 
    0 2 * * * cd /usr/local/salesforceEventLogs; ./salesforceEventLogs.py
+
+   DAILY RUNS: Set "interval" in conf file to "hourly" and add the following entry to the root crontab so the script will run every hour
+
+   0 * * * * cd /usr/local/salesforceEventLogs; ./salesforceEventLogs.py
 
 Testing:
 
