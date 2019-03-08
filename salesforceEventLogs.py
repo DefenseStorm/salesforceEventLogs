@@ -77,7 +77,11 @@ class integration(object):
             sys.exit()
     
         # If directory doesn't exist, create one
-        os.makedirs(dir)
+        try:
+            os.makedirs(dir)
+        except:
+            self.ds.log('ERROR', "Bad entry for 'interval' in conf file")
+            sys.exit()
     
         # loop over elements in result and download each file locally
         for i in range(total_size):
