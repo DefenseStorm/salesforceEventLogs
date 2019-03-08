@@ -80,7 +80,7 @@ class integration(object):
         try:
             os.makedirs(dir)
         except:
-            self.ds.log('ERROR', "Bad entry for 'interval' in conf file")
+            self.ds.log('ERROR', "Directory (%s) already exists...exiting" %dir)
             sys.exit()
     
         # loop over elements in result and download each file locally
