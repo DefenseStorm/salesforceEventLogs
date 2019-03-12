@@ -31,7 +31,8 @@ class integration(object):
         'SOURCE_IP' : 'src_ip',
         'BROWSER_TYPE' : 'http_user_agent',
         'URI' : 'http_path',
-        'LOGIN_STATUS' : 'status'
+        'LOGIN_STATUS' : 'status',
+        'DELEGATED_USER_NAME' : 'src_username'
     }
 
     def getSalesForceLookupList(self, ObjectName, ElementName):
