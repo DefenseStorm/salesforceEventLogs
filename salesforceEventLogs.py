@@ -35,6 +35,7 @@ class integration(object):
         'DELEGATED_USER_NAME' : 'src_username'
     }
 
+
     def getSalesForceLookupList(self, ObjectName, ElementName):
         entries = {}
         query = 'SELECT Id,%s From %s' %(ElementName, ObjectName)
