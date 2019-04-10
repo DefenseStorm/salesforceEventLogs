@@ -82,8 +82,12 @@ class integration(object):
         try:
             os.makedirs(dir)
         except:
-            self.ds.log('ERROR', "Directory (%s) already exists...exiting" %dir)
-            sys.exit()
+            self.ds.log('ERROR', "Directory (%s) already exists...cleaning up to try to recover" %dir)
+            try:
+                shutil.rmtree(self.dir)
+                os.makedirs(dir)
+            except:
+                sys.exit()
     
         # loop over elements in result and download each file locally
         for i in range(total_size):
@@ -295,24 +299,30 @@ class integration(object):
             self.ds.log('CRITICAL', 'Error Logging into SalesFoce')
             self.ds.log('CRITICAL', traceback.print_exc())
             sys.exit(2)
-    
-        if self.dir == None:
-            self.ds.log('INFO', 'Processing events from Salesforce')
-            if self.interval == 'hourly':
-                self.dir = date.today().strftime("%Y-%m-%d")
+        try:
+            if self.dir == None:
+                self.ds.log('INFO', 'Processing events from Salesforce')
+                if self.interval == 'hourly':
+                    self.dir = date.today().strftime("%Y-%m-%d")
+                else:
+                    self.dir = (date.today() - timedelta(1)).strftime("%Y-%m-%d")
+                self.getEventLogs(self.dir)
             else:
-                self.dir = (date.today() - timedelta(1)).strftime("%Y-%m-%d")
-            self.getEventLogs(self.dir)
-        else:
-            self.ds.log('INFO', 'Processing events from directory: ' + self.dir)
+                self.ds.log('INFO', 'Processing events from directory: ' + self.dir)
 
-        self.filelist = self.dirFile(self.dir)
-        self.getLookupTables() 
-        self.handleFiles(self.dir, self.filelist)
-        if self.cleanup:
-            shutil.rmtree(self.dir)
+            self.filelist = self.dirFile(self.dir)
+            self.getLookupTables() 
+            self.handleFiles(self.dir, self.filelist)
+            if self.cleanup:
+                shutil.rmtree(self.dir)
 
-        self.ds.set_state(self.state_dir, self.new_state)
+            self.ds.set_state(self.state_dir, self.new_state)
+        except:
+            self.ds.log('CRITICAL', 'Error handling salesforce events')
+            self.ds.log('CRITICAL', traceback.print_exc())
+            if self.cleanup:
+                self.ds.log('CRITICAL', 'Attempting Cleanup')
+                shutil.rmtree(self.dir)
 
     def usage(self):
         print
