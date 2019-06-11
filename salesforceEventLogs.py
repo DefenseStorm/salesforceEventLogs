@@ -184,6 +184,11 @@ class integration(object):
                     except KeyError:
                         pass
                     try:
+                        if 'ENTITY_ID' in line.keys():
+                            line['ATTACHMENT'] = self.AttachmentList[line['ENTITY_ID']]
+                    except KeyError:
+                        pass
+                    try:
                         if 'DASHBOARD_COMPONENT_ID' in line.keys():
                             line['DASHBOARD_COMPONENT'] = self.DashboardComponentList[line['DASHBOARD_COMPONENT_ID']]
                     except KeyError:
@@ -273,6 +278,7 @@ class integration(object):
         self.ReportList = self.getSalesForceLookupList('Report', 'Name')
         self.DashboardList = self.getSalesForceLookupList('Dashboard', 'Title')
         self.DocumentList = self.getSalesForceLookupList('Document', 'Name')
+        self.AttachmentList = self.getSalesForceLookupList('Attachment', 'Name')
         self.DashboardComponentList = self.getSalesForceLookupList('DashboardComponent', 'Name')
         self.SiteList = self.getSalesForceLookupList('Site', 'Name')
         self.UserList = self.getSalesForceLookupList('User', 'Email')
