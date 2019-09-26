@@ -240,6 +240,8 @@ class integration(object):
                             extension['requestCookies'] = line[key]
                         elif key == 'TIMESTAMP':
                             extension['rt'] = str(int(time.mktime(time.strptime(line[key], '%Y%m%d%H%M%S.%f')))*1000)
+                            extension['sf_timestamp'] = extension['TIMESTAMP']
+                            del extension['TIMESTAMP']
                         elif key == 'SOURCE_IP':
                             extension['sourceTranslatedAddress'] = line[key]
                         elif key == 'CLIENT_IP':
@@ -265,8 +267,13 @@ class integration(object):
             self.ds.log('INFO', 'Completed events from file: %s elapsed time: %s' %(item['filename'], str('%0.2f' %secs)))
     
     def dirFile(self, datadir):
-       dirlist = [ f for f in os.listdir(datadir) if os.path.isfile(os.path.join(datadir,f)) ]
        filelist = []
+
+       if not os.path.isfile(datadir):
+           self.ds.log('INFO', 'Data download directory (%s) does not exist' %datadir)
+           return filelist
+
+       dirlist = [ f for f in os.listdir(datadir) if os.path.isfile(os.path.join(datadir,f)) ]
        for filename in dirlist:
           types=filename[11:-4]
           mydict = { 'type': types, 'filename': filename }
@@ -301,9 +308,11 @@ class integration(object):
             sys.exit(2)
         try:
             self.sf = Salesforce(instance_url=self.instance_url, username=self.username, password=self.password, security_token=self.security_token)
-        except getopt.GetoptError:
+        except Exception as e:
+            tb = traceback.format_exc()
+            tb = tb.replace('\n', "")
             self.ds.log('CRITICAL', 'Error Logging into SalesFoce')
-            self.ds.log('CRITICAL', traceback.print_exc())
+            self.ds.log('CRITICAL', '%s' %tb)
             sys.exit(2)
         try:
             if self.dir == None:
@@ -317,12 +326,16 @@ class integration(object):
                 self.ds.log('INFO', 'Processing events from directory: ' + self.dir)
 
             self.filelist = self.dirFile(self.dir)
-            self.getLookupTables() 
-            self.handleFiles(self.dir, self.filelist)
-            if self.cleanup:
-                shutil.rmtree(self.dir)
+            if self.filelist.len() > 0:
+                self.getLookupTables() 
+                self.handleFiles(self.dir, self.filelist)
+                if self.cleanup:
+                    shutil.rmtree(self.dir)
+            else:
+                self.ds.log('INFO', 'No log files to process.  Error downloading or no work to do based on state file')
 
-            self.ds.set_state(self.state_dir, self.new_state)
+            if self.cleanup:
+                self.ds.set_state(self.state_dir, self.new_state)
         except:
             self.ds.log('CRITICAL', 'Error handling salesforce events')
             self.ds.log('CRITICAL', traceback.print_exc())
@@ -379,10 +392,13 @@ class integration(object):
     
         try:
             self.ds = DefenseStorm('salesforceEventLogs', testing=self.testing, send_syslog = self.send_syslog)
-        except Exception ,e:
+        except Exception as e:
             traceback.print_exc()
             try:
-                self.ds.log('ERROR', 'ERROR: ' + str(e))
+                tb = traceback.format_exc()
+                tb = tb.replace('\n', "")
+                self.ds.log('CRITICAL', 'Error Logging into SalesFoce')
+                self.ds.log('ERROR', 'ERROR: %s' %tb)
             except:
                 pass
 
