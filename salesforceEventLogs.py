@@ -26,7 +26,7 @@ class integration(object):
         'CLIENT_IP' : 'ip_src',
         'USER' : 'username',
         'EVENT_TYPE' : 'category',
-        'TIMESTAMP_DERIVED' : 'timestamp',
+        #'TIMESTAMP_DERIVED' : 'timestamp',
         'FILE_TYPE' : 'file_type',
         'SOURCE_IP' : 'src_ip',
         'BROWSER_TYPE' : 'http_user_agent',
