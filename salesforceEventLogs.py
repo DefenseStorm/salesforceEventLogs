@@ -269,7 +269,7 @@ class integration(object):
     def dirFile(self, datadir):
        filelist = []
 
-       if not os.path.isfile(datadir):
+       if not os.path.isdir(datadir):
            self.ds.log('INFO', 'Data download directory (%s) does not exist' %datadir)
            return filelist
 
@@ -326,7 +326,7 @@ class integration(object):
                 self.ds.log('INFO', 'Processing events from directory: ' + self.dir)
 
             self.filelist = self.dirFile(self.dir)
-            if self.filelist.len() > 0:
+            if len(self.filelist) > 0:
                 self.getLookupTables() 
                 self.handleFiles(self.dir, self.filelist)
                 if self.cleanup:
