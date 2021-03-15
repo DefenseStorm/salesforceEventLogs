@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys,os,getopt
-sys.path.insert(0, 'simple-salesforce')
+#sys.path.insert(0, 'simple-salesforce')
 from simple_salesforce import Salesforce
 import urllib
-import urllib2
+#import urllib2
 import csv
 import time
 import gzip
@@ -12,7 +12,8 @@ import shutil
 import traceback
 
 from datetime import date, timedelta, datetime
-from StringIO import StringIO
+#from StringIO import StringIO
+import io
 
 import os
 
@@ -116,7 +117,7 @@ class integration(object):
             # compression code from http://bit.ly/pyCompression
             if res.info().get('Content-Encoding') == 'gzip':
                 # buffer results
-                buf = StringIO(res.read())
+                buf = io.StringIO(res.read())
                 # gzip decode the response
                 f = gzip.GzipFile(fileobj=buf)
                 data = f.read()
@@ -124,7 +125,7 @@ class integration(object):
                 buf.close()
             else:
                 # buffer results
-                buf = StringIO(res.read())
+                buf = io.StringIO(res.read())
                 # get the value from the buffer
                 data = buf.getvalue()
                 buf.close()
@@ -344,22 +345,22 @@ class integration(object):
                 shutil.rmtree(self.dir)
 
     def usage(self):
+        print('')
+        print(os.path.basename(__file__))
         print
-        print os.path.basename(__file__)
+        print('  No Options: Download yesterdays files from SF and process')
         print
-        print '  No Options: Download yesterdays files from SF and process'
+        print('  -t    Testing mode.  Do all the work but do not send events to GRID via ')
+        print('        syslog Local7.  Instead write the events to file \'output.TIMESTAMP\'')
+        print('        in the current directory')
         print
-        print '  -t    Testing mode.  Do all the work but do not send events to GRID via '
-        print '        syslog Local7.  Instead write the events to file \'output.TIMESTAMP\''
-        print '        in the current directory'
+        print('  -d <directory>')
+        print('        Rerun with a set of CSV files on disk in the specificed directory')
+        print('        NOTE: This will not delete the directory after successful run')
         print
-        print '  -d <directory>'
-        print '        Rerun with a set of CSV files on disk in the specificed directory'
-        print '        NOTE: This will not delete the directory after successful run'
+        print('  -n    Do not cleanup the download directory after run')
         print
-        print '  -n    Do not cleanup the download directory after run'
-        print
-        print '  -l    Log to stdout instead of syslog Local6'
+        print('  -l    Log to stdout instead of syslog Local6')
         print
     
     def __init__(self, argv):
