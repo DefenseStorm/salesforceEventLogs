@@ -324,7 +324,7 @@ class integration(object):
                 sys.exit()
             elif opt in ("-d"):
                 self.dir = arg
-                #self.cleanup = False
+                self.cleanup = False
             elif opt in ("-t"):
                 self.testing = True
             elif opt in ("-n"):
