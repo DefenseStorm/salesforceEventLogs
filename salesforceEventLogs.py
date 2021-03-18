@@ -64,7 +64,6 @@ class integration(object):
             self.ds.log('ERROR', "Bad entry for 'interval' in conf file")
             sys.exit()
 
-
         res_dict = self.sf.query_all(query)
     
         # capture record result size to loop over
@@ -199,69 +198,8 @@ class integration(object):
                             line['SITE'] = self.SiteList[line['SITE_ID']]
                     except KeyError:
                         pass
-                    ''' 
-                    try:
-                        if 'EVENT_TYPE' in line.keys():
-                            action = line['EVENT_TYPE']
-                    except KeyError:
-                        action = ''
-                        pass
-
-                    extension = {}
-                    leftovers = []
-                    for key in line:
-                        if line[key] == '':
-                            continue
-                        #elif key == 'USER_ID_DERIVED':
-                        #    extension['duid'] = line[key]
-                        elif key == 'USER':
-                            extension['duser'] = line[key]
-                        elif key == 'REQUEST_STATUS':
-                            if line[key] == 'S':
-                                extension['outcome'] = 'Success'
-                            elif line[key] == 'F':
-                                extension['outcome'] = 'Failure'
-                            elif line[key] == 'U':
-                                extension['outcome'] = 'Undefined'
-                            elif line[key] == 'A':
-                                extension['outcome'] = 'Authorization Error'
-                            elif line[key] == 'R':
-                                extension['outcome'] = 'Redirect'
-                            elif line[key] == 'N':
-                                extension['outcome'] = 'Not Found'
-                            else:
-                                extension['outcome'] = line[key]
-                        elif key == 'LOGIN_STATUS':
-                            extension['reason'] = line[key]
-                        elif key == 'URI':
-                            extension['request'] = line[key]
-                        elif key == 'USER_AGENT':
-                            extension['requestClientApplication'] = line[key]
-                        elif key == 'LOGIN_KEY':
-                            extension['requestCookies'] = line[key]
-                        elif key == 'TIMESTAMP':
-                            extension['rt'] = str(int(time.mktime(time.strptime(line[key], '%Y%m%d%H%M%S.%f')))*1000)
-                            extension['sf_timestamp'] = extension['TIMESTAMP']
-                            del extension['TIMESTAMP']
-                        elif key == 'SOURCE_IP':
-                            extension['sourceTranslatedAddress'] = line[key]
-                        elif key == 'CLIENT_IP':
-                            extension['src'] = line[key]
-                        elif key == 'ENTITY_NAME':
-                            extension['cs1Label'] = 'entity_name'
-                            extension['cs1'] = line[key]
-                        elif key == 'CLIENT_IP':
-                            extension['cs2Label'] = 'client_ip'
-                            extension['cs2'] = line[key]
-                        else:
-                            leftovers.extend([key + '=' + line[key]])
-    
-                    extension['msg'] = ' '.join(leftovers).replace('=','\\=')
-    
-                    self.ds.writeCEFEvent(type=type, action=action, dataDict=extension)
-                    '''
                     line['message'] = line['EVENT_TYPE']
-                    self.ds.writeJSONEvent(line, JSON_field_mappings = self.JSON_field_mappings)
+                    self.ds.writeJSONEvent(line, JSON_field_mappings = self.JSON_field_mappings, flatten=False)
 
             end = time.time()
             secs = end - start
@@ -342,7 +280,10 @@ class integration(object):
             self.ds.log('CRITICAL', traceback.print_exc())
             if self.cleanup:
                 self.ds.log('CRITICAL', 'Attempting Cleanup')
-                shutil.rmtree(self.dir)
+                try:
+                    shutil.rmtree(self.dir)
+                except:
+                    pass
 
     def usage(self):
         print('')
@@ -383,7 +324,7 @@ class integration(object):
                 sys.exit()
             elif opt in ("-d"):
                 self.dir = arg
-                self.cleanup = False
+                #self.cleanup = False
             elif opt in ("-t"):
                 self.testing = True
             elif opt in ("-n"):
