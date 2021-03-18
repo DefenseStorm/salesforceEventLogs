@@ -3,7 +3,7 @@
 import sys,os,getopt
 #sys.path.insert(0, 'simple-salesforce')
 from simple_salesforce import Salesforce
-import urllib
+from urllib import request
 #import urllib2
 import csv
 import time
@@ -107,8 +107,8 @@ class integration(object):
             start = time.time()
     
             # open connection
-            req = urllib2.Request(url, None, headers)
-            res = urllib2.urlopen(req)
+            req = request.Request(url, headers=headers)
+            res = request.urlopen(req)
     
             # provide feedback to user
             self.ds.log('DEBUG', 'Downloading: ' + dates + '-' + types + '.csv to ' + os.getcwd() + '/' + dir)
@@ -117,7 +117,7 @@ class integration(object):
             # compression code from http://bit.ly/pyCompression
             if res.info().get('Content-Encoding') == 'gzip':
                 # buffer results
-                buf = io.StringIO(res.read())
+                buf = io.BytesIO(res.read())
                 # gzip decode the response
                 f = gzip.GzipFile(fileobj=buf)
                 data = f.read()
@@ -125,14 +125,14 @@ class integration(object):
                 buf.close()
             else:
                 # buffer results
-                buf = io.StringIO(res.read())
+                buf = io.BytesIO(res.read())
                 # get the value from the buffer
                 data = buf.getvalue()
                 buf.close()
     
             # write buffer to CSV with following naming convention yyyy-mm-dd-eventtype.csv
             file = open(dir + '/' +dates+'-'+types+'.csv', 'w')
-            file.write(data)
+            file.write(data.decode("utf-8"))
     
             # end profiling
             end = time.time()
