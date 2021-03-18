@@ -151,7 +151,7 @@ class integration(object):
         for item in filelist:
             start = time.time()
             file=item['filename']
-            self.ds.log('DEBUG', 'Starting sending file: %s' %item['filename'])
+            self.ds.log('INFO', 'Starting sending file: %s' %item['filename'])
             with open(datadir+'/'+file) as f:
                 header = f.readline()
                 header = header.replace('\"','')
