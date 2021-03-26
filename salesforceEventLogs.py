@@ -130,7 +130,7 @@ class integration(object):
                 buf.close()
     
             # write buffer to CSV with following naming convention yyyy-mm-dd-eventtype.csv
-            file = open(dir + '/' +dates+'-'+types+'.csv', 'w')
+            file = open(dir + '/' +dates+'-'+types+'.csv', 'w', encoding='utf-8')
             file.write(data.decode("utf-8", 'ignore'))
     
             # end profiling
